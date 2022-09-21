@@ -21,13 +21,32 @@ describe("ERC20", function () {
   it("should mint tokens", async function () {
     const { deployer } = await getNamedAccounts();
 
-    expect(await WrapperController.mint(deployer, 1000, "BAR123", "WARRANT456")).not.to.be.reverted;
+    expect(await WrapperController.mint(deployer, 1000, 123)).not.to.be.reverted;
     expect(await ERC20.balanceOf(deployer)).to.equal(1000);
   });
   it("should not allow to mint from deployer account", async function () {
     const { deployer } = await getNamedAccounts();
     await expect(ERC20.mint(deployer, 1000)).to.be.revertedWith("Ownable: caller is not the owner");
   });
-
+  it("should mint and then burn the tokens", async () => {
+    const { deployer } = await getNamedAccounts();
+    await WrapperController.mint(deployer, 1000, 123);
+    await WrapperController.mint(deployer, 1000, 124);
+    expect(await ERC20.transfer(WrapperController.address, 1000)).not.to.be.reverted;
+    expect(await WrapperController.burn([800, 200], [123, 124])).not.to.be.reverted;
+    console.log(await WrapperController.getReAssignment(0));
+    expect(await WrapperController.getBarBalance(123)).to.equal(1000);
+    expect(await WrapperController.getBarBalance(124)).to.equal(0);
+  })
+  it("should mint and then burn the tokens", async () => {
+    const { deployer } = await getNamedAccounts();
+    await WrapperController.mint(deployer, 1000, 123);
+    await WrapperController.mint(deployer, 1000, 124);
+    expect(await ERC20.transfer(WrapperController.address, 1000)).not.to.be.reverted;
+    expect(await WrapperController.burn([200, 800], [123, 124])).not.to.be.reverted;
+    console.log(await WrapperController.getReAssignment(0));
+    expect(await WrapperController.getBarBalance(123)).to.equal(1000);
+    expect(await WrapperController.getBarBalance(124)).to.equal(0);
+  })
 
 });
